@@ -45,7 +45,7 @@ class SarcasmDataset(Dataset):
         item = self.data[index]
         
         text = item["headline"]
-        label = torch.tensor([item["is_sarcastic"]], dtype=torch.long)
+        label = torch.tensor(int(item["is_sarcastic"]), dtype=torch.long)
 
         encoding = self.tokenizer.encode_plus(
             text,
@@ -125,7 +125,7 @@ def train_loop(
             # Move batch components to device
             input_ids = batch["input_ids"].to(device)
             attention_mask = batch["attention_mask"].to(device)
-            labels = batch["label"].to(device).squeeze(1)
+            labels = batch["label"].to(device).view(-1)
 
             # Forward pass, Loss calculation, Backward pass, Optimizer step
             optimizer.zero_grad()
@@ -138,7 +138,7 @@ def train_loop(
 
             epoch_loss += loss.item()
             
-        avg_loss = epoch_loss / len(dataloader)
+        avg_loss = epoch_loss / max(len(dataloader), 1)
         loss_history.append(avg_loss)
         print(f"Epoch {epoch+1}/{epochs} - Loss: {avg_loss:.4f}")
 
